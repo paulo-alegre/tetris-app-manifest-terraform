@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: tetris
-        image: ipau/tetrisv2:latest
+        image: ipau/tetrisv2:19
         ports:
         - containerPort: 3000   # Use port 3000
 
