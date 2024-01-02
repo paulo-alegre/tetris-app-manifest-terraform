@@ -68,7 +68,7 @@ resource "aws_iam_role_policy_attachment" "tetris-eks-AmazonEKSWorkerNodePolicy"
   role       = aws_iam_role.tetris-eks-cluster-role.name
 }
 
-resource "aws_iam_role_policy_attachment" "tetris-eks_CNI_Policy" {
+resource "aws_iam_role_policy_attachment" "tetris-eks-AmazonEKSCNIPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
   role       = aws_iam_role.tetris-eks-cluster-role.name
 }
@@ -96,7 +96,7 @@ resource "aws_eks_node_group" "tetris-node" {
   # Otherwise, EKS will not be able to properly delete EC2 Instances and Elastic Network Interfaces.
   depends_on = [
     aws_iam_role_policy_attachment.tetris-eks-AmazonEKSWorkerNodePolicy,
-    aws_iam_role_policy_attachment.tetris-eks-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.tetris-eks-AmazonEKSCNIPolicy,
     aws_iam_role_policy_attachment.tetris-eks-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
