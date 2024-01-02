@@ -81,7 +81,7 @@ resource "aws_iam_role_policy_attachment" "tetris-eks-AmazonEC2ContainerRegistry
 #create node group
 resource "aws_eks_node_group" "tetris-node" {
   cluster_name    = aws_eks_cluster.tetris-eks-cluster.name
-  node_group_name = "tetris-node-cloud"
+  node_group_name = "tetris-eks-node-group-cloud"
   node_role_arn   = aws_iam_role.tetris-eks-cluster-role.arn
   subnet_ids      = data.aws_subnets.public.ids
 
