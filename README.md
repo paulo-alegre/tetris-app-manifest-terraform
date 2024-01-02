@@ -1,13 +1,14 @@
 # Tetris-DevSecOps-Pipeline Project
 
 ## Tools used in this project
-- Jenkins
-- SonarQube
+- Jenkins (Port 8080)
+- SonarQube (Port 9000)
 - Trivy
 - OWASP
-- Grafana
-- Prometheus
+- Grafana (Port 3000)
+- Prometheus (Port 9090)
 - Terraform
+- Node Export (Port 9100)
 - Git
 - Docker
 - Argo CD
@@ -65,3 +66,24 @@
     terraform apply
  ```
 - After completion of the apply, go and check the created AWS resources in your console.
+- These resources will be created EC2 instance with Security group, IAM role with policy attachment & IAM instance profile
+- And security group should contain inbound rule to open these ports: 80, 443, 22, 8080, 9000, 3000
+
+ ### **Phase 1a: Infrastructure Provisioning** 
+ - go to folder 'grafana-prometheus-terraform' and start executing these commands:
+
+ ```bash
+    terraform init
+ ```
+
+ ```bash
+    terraform validate
+ ```
+
+ ```bash
+    terraform plan
+ ```
+
+ ```bash
+    terraform apply
+ ```
