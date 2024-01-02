@@ -69,21 +69,48 @@
 - These resources will be created EC2 instance with Security group, IAM role with policy attachment & IAM instance profile
 - And security group should contain inbound rule to open these ports: 80, 443, 22, 8080, 9000, 3000
 
- ### **Phase 1a: Infrastructure Provisioning** 
- - go to folder 'grafana-prometheus-terraform' and start executing these commands:
-
- ```bash
-    terraform init
+ ### **Phase 2: Configure Jenkins EC2 Instance** 
+ - SSH to Jenkins instance public IP which you can in AWS instance.
+ - Execute these commands to check the installed packages:
+   
+```bash
+    trivy --version
  ```
 
- ```bash
-    terraform validate
+```bash
+    docker --version
  ```
 
- ```bash
-    terraform plan
+```bash
+   aws --version
  ```
 
- ```bash
-    terraform apply
+```bash
+   terraform --version
  ```
+
+```bash
+   kubectl version
+ ```
+- Check if the sonar is running in a container
+
+  To access: 
+  publicIP:9000 (by default username & password is admin)
+  
+```bash
+   docker ps
+ ```
+
+ ### **Configure Jenkins EC2 Instance** 
+  
+  To access jenkins: 
+  publicIP:8080 
+
+  To jenkins password:
+  
+  ```bash
+    sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+ ```
+ - Install recommended plugins and skip the creation of user
+ - Go to Manage Jenkins > Plugins > Available Plugins > Search 'Terraform'
+ 
