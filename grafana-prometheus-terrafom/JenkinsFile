@@ -1,0 +1,43 @@
+pipeline{
+    agent any
+    stages {
+        stage('Checkout from Git'){
+            steps{
+                git 'https://github.com/paulo-alegre/tetris-app-manifest-terraform.git'
+            }
+        }
+        stage('Terraform version'){
+             steps{
+                 sh 'terraform --version'
+             }
+        }
+        stage('Terraform init'){
+             steps{
+                 dir('grafana-prometheus-terraform') {
+                      sh 'terraform init'
+                   }      
+             }
+        }
+        stage('Terraform validate'){
+             steps{
+                 dir('grafana-prometheus-terraform') {
+                      sh 'terraform validate'
+                   }      
+             }
+        }
+        stage('Terraform plan'){
+             steps{
+                 dir('eks-terraform') {
+                      sh 'terraform plan'
+                   }      
+             }
+        }
+        stage('Terraform apply/destroy'){
+             steps{
+                 dir('grafana-prometheus-terraform') {
+                      sh 'terraform ${action} --auto-approve'
+                   }      
+             }
+        }
+    }
+}
