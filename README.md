@@ -1,4 +1,6 @@
-# Tetris-DevSecOps-Pipeline Project
+# Tetris-DevOps-Pipeline Project
+
+![Tetris v2](https://github.com/paulo-alegre/tetris-app-manifest-terraform/assets/66103175/47e8e3d5-8ff8-4ef3-9719-3caab405e9d4)
 
 ## Tools used in this project
 - Jenkins (Port 8080)
@@ -130,7 +132,12 @@
  - Once saved, click the 'Build with Parameters' > action 'apply' > Build
  - If the pipeline is successful, you can check now the resources created in the AWS Console for your EKS Cluster.
  - If the pipeline is failed, please check the console output and see the root cause of the errors.
-   
+
+ ![Jenkins Tetris Pipeliine](https://github.com/paulo-alegre/tetris-app-manifest-terraform/assets/66103175/3f1998ae-f05f-4dca-9334-a370bf940315)
+
+ ![Owasp DP Check](https://github.com/paulo-alegre/tetris-app-manifest-terraform/assets/66103175/9f7062a5-ea7c-4504-82b1-8699f7a198f7)
+
+
  ### **Install Additional Plugins for Jenkins Application** 
  - Go to Manage Jenkins > Plugins > Available Plugins > Search and check these plugins
     - Eclipse Temurin Installer (Java 17)
@@ -151,6 +158,9 @@
     *** Note: Remember name you input because it is case sensitive when you it in the pipeline script.
 
   ### **Configure Sonar Server in Manage Jenkins**
+  
+  ![SonarQube](https://github.com/paulo-alegre/tetris-app-manifest-terraform/assets/66103175/3e49c1df-003f-4662-b673-3950bb07da67)
+
    - go to your Jenkins EC2 instance, <PublicIP:9000> Administration > Security > Users > Tokens and Update Token > Generate a token for the Admin User
    - copy the token, then go back to Jenkins Application > Manage Jenkins > Credentials > Add Secret Text
       - Secret: paste the token here
@@ -189,6 +199,9 @@
      ```
      
       ### ARGO CD SETUP
+     
+     ![ArgoCD](https://github.com/paulo-alegre/tetris-app-manifest-terraform/assets/66103175/d79697f9-2aa1-4e1e-a44e-d3e23bf2cdc5)
+
       - to install ArgoCD, use this link for installation guide https://archive.eksworkshop.com/intermediate/290_argocd/install/
       - then execute these commands to create namespace
 
@@ -249,6 +262,8 @@
       ```
 
      ### **Configure Grafana and Prometheus EC2 Instance**
+     
+      ![Prometheus](https://github.com/paulo-alegre/tetris-app-manifest-terraform/assets/66103175/4855b9a6-c17d-4069-9d01-2cedf5132b5a)
 
      Create a systemd unit configuration file for Prometheus:
 
@@ -454,4 +469,10 @@
         You should now have a Grafana dashboard set up to visualize metrics from Prometheus.
         
         Grafana is a powerful tool for creating visualizations and dashboards, and you can further customize it to suit your specific monitoring needs.
+
+       ![Jenkins Garfana](https://github.com/paulo-alegre/tetris-app-manifest-terraform/assets/66103175/3f192f55-cca2-4bef-8066-cd0879fe93fb)
+
+       ![Node Exporter Grafana](https://github.com/paulo-alegre/tetris-app-manifest-terraform/assets/66103175/f5c06ecf-163f-41f1-91c9-c5f4e62cdf5a)
+
+
      
