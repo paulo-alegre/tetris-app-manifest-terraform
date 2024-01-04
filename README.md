@@ -181,3 +181,277 @@
    ```bash
       aws eks update-kubeconfig --name TETRIS_EKS_CLOUD --region ap-southeast-1
    ```
+
+   - to check the nodes, enter this command:
+     
+     ```bash
+      kubectl get nodes
+     ```
+     
+      ### ARGO CD SETUP
+      - to install ArgoCD, use this link for installation guide https://archive.eksworkshop.com/intermediate/290_argocd/install/
+      - then execute these commands to create namespace
+
+       ```bash
+        kubectl create namespace argocd
+        kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.4.7/manifests/install.yaml
+       ```
+      - By default, argocde-server is not publicly exposed, but for this project we will use a load balancer service.
+
+      ```bash
+        kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+      ```
+
+      - Wait for about 2 minutes to create the Load Balancer. Then install jq so we export the ArgoCD server
+
+     ```bash
+        sudo apt install jq -y
+      ```
+
+     ```bash
+        export ARGOCD_SERVER=`kubectl get svc argocd-server -n argocd -o json | jq --raw-output '.status.loadBalancer.ingress[0].hostname'`
+      ```
+
+     ```bash
+        echo $ARGOCD_SERVER
+      ```
+
+     - for the password of the ARGOCD, you can get it by executing these commands:
+
+     ```bash
+        echo $ARGO_PWD
+      ```
+     
+      ```bash
+        echo $ARGOCD_SERVER
+      ```
+
+       ### ARGO CD Configuration
+       - Manage your repositories Project Settings > Repositories > Connect Repo Using HTTPS
+         - Type: git
+         - Project: default
+         - Repo URL: https://github.com/paulo-alegre/tetris-app-manifest-terraform.git
+       - Test your connection
+       - Click on Manage Your Application > New App, then provide the image details
+         - Application Name: tetris
+         - Project Name: default
+         - Sync Policy: Automatic
+         - Source: https://github.com/paulo-alegre/tetris-app-manifest-terraform.git
+         - Revision: HEAD
+         - Path: ./
+         - Destination: https://kubernetes.default.svc
+         - Namespace: default
+      - Click on Create, then it will create your project and create another load balancer.
+      - To check if the deployment went well, enter these command:
+
+     ```bash
+        kubectl get all
+      ```
+
+     ### **Configure Grafana and Prometheus EC2 Instance**
+
+     Create a systemd unit configuration file for Prometheus:
+
+     ```bash
+     sudo vi /etc/systemd/system/prometheus.service
+     ```
+  
+     Add the following content to the `prometheus.service` file:
+  
+     ```plaintext
+     [Unit]
+     Description=Prometheus
+     Wants=network-online.target
+     After=network-online.target
+  
+     StartLimitIntervalSec=500
+     StartLimitBurst=5
+  
+     [Service]
+     User=prometheus
+     Group=prometheus
+     Type=simple
+     Restart=on-failure
+     RestartSec=5s
+     ExecStart=/usr/local/bin/prometheus \
+       --config.file=/etc/prometheus/prometheus.yml \
+       --storage.tsdb.path=/data \
+       --web.console.templates=/etc/prometheus/consoles \
+       --web.console.libraries=/etc/prometheus/console_libraries \
+       --web.listen-address=0.0.0.0:9090 \
+       --web.enable-lifecycle
+  
+     [Install]
+     WantedBy=multi-user.target
+     ```
+  
+     Here's a brief explanation of the key parts in this `prometheus.service` file:
+  
+     - `User` and `Group` specify the Linux user and group under which Prometheus will run.
+  
+     - `ExecStart` is where you specify the Prometheus binary path, the location of the configuration file (`prometheus.yml`), the storage directory, and other settings.
+  
+     - `web.listen-address` configures Prometheus to listen on all network interfaces on port 9090.
+  
+     - `web.enable-lifecycle` allows for management of Prometheus through API calls.
+  
+     Enable and start Prometheus:
+  
+     ```bash
+     sudo systemctl enable prometheus
+     sudo systemctl start prometheus
+     ```
+  
+     Verify Prometheus's status:
+  
+     ```bash
+     sudo systemctl status prometheus
+     ```
+  
+     You can access Prometheus in a web browser using your server's IP and port 9090:
+  
+     `http://<your-server-ip>:9090`
+
+     **Installing Node Exporter:**
+     
+      Create a systemd unit configuration file for Node Exporter:
+
+     ```bash
+     sudo vi /etc/systemd/system/node_exporter.service
+     ```
+  
+     Add the following content to the `node_exporter.service` file:
+  
+     ```plaintext
+     [Unit]
+     Description=Node Exporter
+     Wants=network-online.target
+     After=network-online.target
+  
+     StartLimitIntervalSec=500
+     StartLimitBurst=5
+  
+     [Service]
+     User=node_exporter
+     Group=node_exporter
+     Type=simple
+     Restart=on-failure
+     RestartSec=5s
+     ExecStart=/usr/local/bin/node_exporter --collector.logind
+  
+     [Install]
+     WantedBy=multi-user.target
+     ```
+  
+     Replace `--collector.logind` with any additional flags as needed.
+  
+     Enable and start Node Exporter:
+  
+     ```bash
+     sudo systemctl enable node_exporter
+     sudo systemctl start node_exporter
+     ```
+  
+     Verify the Node Exporter's status:
+  
+     ```bash
+     sudo systemctl status node_exporter
+     ```
+  
+     You can access Node Exporter metrics in Prometheus.
+
+     **Configure Prometheus Plugin Integration:**
+
+     Integrate Jenkins with Prometheus to monitor the CI/CD pipeline.
+
+     **Prometheus Configuration:**
+  
+     To configure Prometheus to scrape metrics from Node Exporter and Jenkins, you need to modify the `prometheus.yml` file. Here is an example `prometheus.yml` configuration for your setup:
+  
+     ```yaml
+     global:
+       scrape_interval: 15s
+  
+     scrape_configs:
+       - job_name: 'node_exporter'
+         static_configs:
+           - targets: ['localhost:9100']
+  
+       - job_name: 'jenkins'
+         metrics_path: '/prometheus'
+         static_configs:
+           - targets: ['<your-jenkins-ip>:<your-jenkins-port>']
+     ```
+  
+     Make sure to replace `<your-jenkins-ip>` and `<your-jenkins-port>` with the appropriate values for your Jenkins setup.
+  
+     Check the validity of the configuration file:
+  
+     ```bash
+     promtool check config /etc/prometheus/prometheus.yml
+     ```
+  
+     Reload the Prometheus configuration without restarting:
+  
+     ```bash
+     curl -X POST http://localhost:9090/-/reload
+     ```
+  
+     You can access Prometheus targets at:
+  
+     `http://<your-prometheus-ip>:9090/targets`
+
+     ####Grafana
+
+      **Install Grafana on Ubuntu 22.04 and Set it up to Work with Prometheus**
+
+       ** Access Grafana Web Interface:**
+
+        Open a web browser and navigate to Grafana using your server's IP address. The default port for Grafana is 3000. For example:
+        
+        `http://<your-server-ip>:3000`
+        
+        You'll be prompted to log in to Grafana. The default username is "admin," and the default password is also "admin."
+        
+        **Step 8: Change the Default Password:**
+        
+        When you log in for the first time, Grafana will prompt you to change the default password for security reasons. Follow the prompts to set a new password.
+        
+        **Step 9: Add Prometheus Data Source:**
+        
+        To visualize metrics, you need to add a data source. Follow these steps:
+        
+        - Click on the gear icon (⚙️) in the left sidebar to open the "Configuration" menu.
+        
+        - Select "Data Sources."
+        
+        - Click on the "Add data source" button.
+        
+        - Choose "Prometheus" as the data source type.
+        
+        - In the "HTTP" section:
+          - Set the "URL" to `http://localhost:9090` (assuming Prometheus is running on the same server).
+          - Click the "Save & Test" button to ensure the data source is working.
+        
+        **Import a Dashboard:**
+        
+        To make it easier to view metrics, you can import a pre-configured dashboard. Follow these steps:
+        
+        - Click on the "+" (plus) icon in the left sidebar to open the "Create" menu.
+        
+        - Select "Dashboard."
+        
+        - Click on the "Import" dashboard option.
+        
+        - Enter the dashboard code you want to import (e.g., code 1860).
+        
+        - Click the "Load" button.
+        
+        - Select the data source you added (Prometheus) from the dropdown.
+        
+        - Click on the "Import" button.
+        
+        You should now have a Grafana dashboard set up to visualize metrics from Prometheus.
+        
+        Grafana is a powerful tool for creating visualizations and dashboards, and you can further customize it to suit your specific monitoring needs.
+     
